@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt Scanner</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Receipt Scanner</h1>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="upload-area">
+                <input type="file" id="imageInput" accept="image/*" required>
+                <label for="imageInput" class="custom-file-upload">
+                    Choose File
+                </label>
+                <span id="fileName">No file chosen</span>
+            </div>
+            <button type="submit" class="submit-btn">Scan Receipt</button>
+        </form>
+        <div id="loading" class="loading hidden">Processing...</div>
+        <div id="result" class="result hidden">
+            <h2>Result:</h2>
+            <pre id="resultText"></pre>
+        </div>
+    </div>
+
+    <script>
+        // Update filename when file is selected
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : 'No file chosen';
+            document.getElementById('fileName').textContent = fileName;
+        });
+
+        // Handle form submission
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('imageInput');
+            const loadingDiv = document.getElementById('loading');
+            const resultDiv = document.getElementById('result');
+            const resultText = document.getElementById('resultText');
+
+            if (!fileInput.files[0]) {
+                alert('Please select a file first');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                loadingDiv.classList.remove('hidden');
+                resultDiv.classList.add('hidden');
+
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                loadingDiv.classList.add('hidden');
+                resultDiv.classList.remove('hidden');
+                resultText.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                loadingDiv.classList.add('hidden');
+                alert('Error processing the image. Please try again.');
+                console.error('Error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
